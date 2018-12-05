@@ -1,0 +1,24 @@
+# 接口文档
+	接口名
+	接口功能
+	接口URL
+	请求方式
+	传入参数
+	返回结果
+
+
+# verify_code模块
+	<1>
+	接口名称：get_captcha
+	接口功能：获取验证码图片
+	接口URL：/api/v1.0/captcha/<code>
+	请求方式：GET
+	传入参数：
+		格式：路径参数（查询字符串，请求体的表单，json，xml）
+		参数名       参数类型       是否必须      说明
+		code         字符串         是            前端生成的图片验证码对应的编号
+	
+	返回结果：正常：图片，异常：json
+		异常示例：
+			'{'errorno':'4001','errmsg':"save captcha's code failed!"}'
+	 

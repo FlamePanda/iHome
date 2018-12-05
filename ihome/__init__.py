@@ -19,6 +19,12 @@ db = SQLAlchemy()
 # 得到Redis连接
 get_redis_connect = None
 
+# 分布式文件类
+storage = None
+
+# 项目的根目录
+root_path = None
+
 # 设置日志
 logging.basicConfig(level=logging.DEBUG) # flask开启debug模式会强制设置为logging.DEBUG,无法更改
 file_log_handler = logging.handlers.RotatingFileHandler('ihome/logs/log',maxBytes=1024*1024*100,backupCount=10) # 设置日志处理器
@@ -43,8 +49,16 @@ def create_app(config_name):
 	config_class = config_map.get(config_name)
 	app.config.from_object(config_class)
 	
+	# 设置项目的根目录
+	global root_path
+	root_path = app.root_path
+
 	# 绑定数据库
 	db.init_app(app)
+		
+	# 注册自定义装换器
+	from ihome.utils.utils import ReConverter
+	app.url_map.converters['re'] = ReConverter
 
 	# 注册session为Redis缓存
 	Session(app)
@@ -53,12 +67,19 @@ def create_app(config_name):
 	global get_redis_connect
 	get_redis_connect = redis.Redis(host=config_class.REDIS_HOST,port=config_class.REDIS_PORT,db=config_class.REDIS_DB)
 	
+	# 分布式文件存储类初始化
+	from ihome.libs.fastfdfs.storage import Storage
+	global storage
+	storage = Storage()
+	
 	# csrf防护
 	CSRFProtect(app)
 	
 	# 注册蓝图
 	from ihome import api_0_1
 	app.register_blueprint(api_0_1.api,url_prefix='/api/v1.0')
+	from ihome.web_html import html
+	app.register_blueprint(html)
  
 	# 返回app
 	return app

@@ -58,7 +58,6 @@ function goToSearchPage(th) {
 }
 
 $(document).ready(function(){
-    $(".top-bar>.register-login").show();
     var mySwiper = new Swiper ('.swiper-container', {
         loop: true,
         autoplay: 2000,
@@ -84,4 +83,16 @@ $(document).ready(function(){
         var date = $(this).datepicker("getFormattedDate");
         $("#start-date-input").val(date);
     });
+	//发送ajax请求
+	//请求用户数据
+	var url = '/api/v1.0/session';
+	$.get(url,function(data){
+		if('0' == data.errorno){
+			//显示用户登录信息
+    	$(".top-bar>.user-info").show();
+		$(".user-name").html(data.data);	
+		}else{
+    	$(".top-bar>.register-login").show();
+		}
+	});
 })

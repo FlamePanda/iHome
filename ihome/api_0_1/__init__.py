@@ -7,4 +7,5 @@ api = Blueprint('api_1_0',__name__)
 
 
 # 引入视图函数
-from . import users
+from . import verify_code,passport,profile
+

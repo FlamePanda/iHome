@@ -24,5 +24,31 @@ $(document).ready(function() {
             $("#password-err").show();
             return;
         }
+		//发起ajax请求
+		var params = {
+			phone_number:mobile,
+			password:passwd
+		};
+		var data = JSON.stringify(params);
+		var url = "/api/v1.0/sessions";
+		$.ajax({
+			url:url,
+			type:"post",
+			data:data,
+			contentType:"application/json",
+			dataType:"json",
+			headers:{
+					"X-CSRFToken":getCookie('csrf_token'),
+				},
+			success:function(data){
+				if('0' == data.errorno){
+					//用户登录成功
+					location.href='/index.html';
+				}else{
+					//失败，弹出消息
+					alert(data.errormsg);
+				}	
+			}
+		});
     });
 })

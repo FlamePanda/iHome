@@ -1,0 +1,12 @@
+captcha-api
+工具名:captcha
+功能：生成4位验证码
+API:generate_captcha(path,fmt)
+
+Args:
+    path: save path, default None.
+    fmt: image format, PNG / JPEG.
+Returns:
+    A tuple, (name, text, StringIO.value).
+    For example:
+       ('fXZJN4AFxHGoU5mIlcsdOypa', 'JGW9', '\x89PNG\r\n\x1a\n\x00\x00\x00\r...')

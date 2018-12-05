@@ -1,5 +1,5 @@
 function getCookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    var r = document.cookie.match("\\b" + name  + "=([^;]*)\\b");
     return r ? r[1] : undefined;
 }
 
@@ -19,6 +19,12 @@ function generateUUID() {
 }
 
 function generateImageCode() {
+	//发送验证码请求
+	//获取UUID
+	imageCodeId = generateUUID();
+	//发送请求
+	var url = '/api/v1.0/imageCode/'+imageCodeId;
+	$('.image-code img').attr('src',url);
 }
 
 function sendSMSCode() {
@@ -37,21 +43,20 @@ function sendSMSCode() {
         $(".phonecode-a").attr("onclick", "sendSMSCode();");
         return;
     }
-    $.get("/api/smscode", {mobile:mobile, code:imageCode, codeId:imageCodeId}, 
+	var url = "/api/v1.0/smsCode/"+imageCodeId
+    $.get(url, {'phone_number':mobile, 'picture_code':imageCode}, 
         function(data){
-            if (0 != data.errno) {
-                $("#image-code-err span").html(data.errmsg); 
+            if (0 != data.errorno) {
+                $("#image-code-err span").html(data.errormsg); 
                 $("#image-code-err").show();
-                if (2 == data.errno || 3 == data.errno) {
-                    generateImageCode();
-                }
+                generateImageCode();
                 $(".phonecode-a").attr("onclick", "sendSMSCode();");
             }   
             else {
                 var $time = $(".phonecode-a");
                 var duration = 60;
                 var intervalid = setInterval(function(){
-                    $time.html(duration + "秒"); 
+                    $time.html(duration + "s"); 
                     if(duration === 1){
                         clearInterval(intervalid);
                         $time.html('获取验证码'); 
@@ -83,10 +88,10 @@ $(document).ready(function() {
     });
     $(".form-register").submit(function(e){
         e.preventDefault();
-        mobile = $("#mobile").val();
-        phoneCode = $("#phonecode").val();
-        passwd = $("#password").val();
-        passwd2 = $("#password2").val();
+        var mobile = $("#mobile").val();
+        var phoneCode = $("#phonecode").val();
+        var passwd = $("#password").val();
+        var passwd2 = $("#password2").val();
         if (!mobile) {
             $("#mobile-err span").html("请填写正确的手机号！");
             $("#mobile-err").show();
@@ -107,5 +112,31 @@ $(document).ready(function() {
             $("#password2-err").show();
             return;
         }
+		//发起ajax请求
+		var params = {
+			phone_number:mobile,
+			sms_code:phoneCode,
+			password:passwd,
+			ensure_password:passwd2
+		};
+		var data = JSON.stringify(params);
+		var url = "/api/v1.0/users";
+		$.ajax({
+			url:url,
+			type:"post",
+			data:data,
+			dataType:"json",
+			contentType:"application/json",
+			headers:{
+					"X-CSRFToken":getCookie('csrf_token'),
+				},
+			success:function(data){
+				if("0" == data.errorno){
+						location.href='/index.html';
+					}else{
+						alert(data.errormsg);
+					}
+				}
+		});
     });
 })
