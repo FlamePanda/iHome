@@ -4,7 +4,8 @@ from ihome.utils import response_code
 from ihome import get_redis_connect,db
 from flask import current_app,jsonify,make_response,request
 from ihome import constants
-from ihome.libs.sms.SendTemplateSMS import SMS
+#from ihome.libs.sms.SendTemplateSMS import SMS
+from ihome.tasks.sms.tasks import send_sms_handler
 import re
 from ihome.models import User
 import random
@@ -116,22 +117,9 @@ def get_sms_captcha(code):
 		return jsonify(errorno=response_code.RET.SERVERERR,errormsg='redis error!')
 	
 	# 发送验证码短信
-	reslut = None
-	try:
-		sms = SMS()
-		data = [num,str(int(constants.SMS_CAPTCHA_EXPIRE/60))]
-		#reslut = sms.sendTemplateSMS(to=phone_number,datas=data,tempId=1)
-		reslut = True
-		print('num:',num)
-	except Exception as ex:
-		# 第三方系统错误
-		current_app.logger.error(ex)
-		return jsonify(errorno=response_code.RET.THIRDERR,errormsg='Third-party system error!')
+	data = [num,str(int(constants.SMS_CAPTCHA_EXPIRE/60))]
+	send_sms_handler.delay(phone_number,data,1) # 发送celery任务
+	print('num:',num)
 	''' 返回应答 '''
-	if reslut:
-		# 发送成功
-		return jsonify(errorno=response_code.RET.OK,errormsg='successful send!')
-	else:
-		# 发送失败
-		return jsonify(errorno=response_code.RET.THIRDERR,errormsg='Third-party system error!')
+	return jsonify(errorno=response_code.RET.OK,errormsg='successful send!')
 

@@ -178,7 +178,7 @@ def users_logout():
 # 返回参数,成功：json
 @api.route('/session')
 def users_status():
-	'''用户登出视图函数'''
+	'''用户状态视图函数'''
 	# 获取参数
 	user_id = session.get('userID')
 	user_name = session.get('userName')

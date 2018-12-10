@@ -2,8 +2,8 @@
 
 #-*- coding: UTF-8 -*-  
 
-from CCPRestSDK import REST
-import sms_config 
+from ihome.libs.sms.CCPRestSDK import REST
+import ihome.libs.sms.sms_config as sms_config
 
 class SMS(object):
     '''短信验证码发送类'''

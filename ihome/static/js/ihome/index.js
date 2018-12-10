@@ -58,19 +58,62 @@ function goToSearchPage(th) {
 }
 
 $(document).ready(function(){
-    var mySwiper = new Swiper ('.swiper-container', {
-        loop: true,
-        autoplay: 2000,
-        autoplayDisableOnInteraction: false,
-        pagination: '.swiper-pagination',
-        paginationClickable: true
-    }); 
-    $(".area-list a").click(function(e){
-        $("#area-btn").html($(this).html());
-        $(".search-btn").attr("area-id", $(this).attr("area-id"));
-        $(".search-btn").attr("area-name", $(this).html());
-        $("#area-modal").modal("hide");
-    });
+    	//发送ajax请求
+	//请求用户登录状态
+	var url = '/api/v1.0/session';
+	$.get(url,function(data){
+		if('0' == data.errorno){
+			//显示用户登录信息
+    	$(".top-bar>.user-info").show();
+		$(".user-name").html(data.data);	
+		}else{
+    	$(".top-bar>.register-login").show();
+		}
+	});
+	//
+	//发送ajax请求
+	//请求城区信息
+	$.get("/api/v1.0/areas",function(data){
+		if("0" == data.errorno){
+			//展现城区信息
+			var areas = data.areas;
+			var html = template("areasList",{areas:areas});
+			$(".area-list").html(html);
+			$(".area-list a").click(function(){
+				var area_name = $(this).html();
+				var area_id = $(this).attr("area-id");
+   	        	$("#area-btn").html(area_name);
+   	       	 	$(".search-btn").attr("area-id", area_id);
+	        	$(".search-btn").attr("area-name", area_name);
+	        	$("#area-modal").modal("hide");
+	    	});
+		}else{
+			alert(data.errormsg);
+		}
+	},"json");
+
+	//获取销量最多的房子图片
+	//
+	var url = "/api/v1.0/houses/indexImage";
+	$.get(url,function(data){
+		if("0" == data.errorno){
+			//设置首页图片
+			var images = data.data;
+			var html = template("indexImages",{images:images});
+			$(".swiper-wrapper").html(html);
+			var mySwiper = new Swiper ('.swiper-container', {
+        		loop: true,
+  	        	autoplay: 2000,
+	       		autoplayDisableOnInteraction: false,
+    	    	pagination: '.swiper-pagination',
+        		paginationClickable: true
+    		}); 
+		}else{
+			alert(data.errormsg);
+		}	
+	},"json");
+
+
     $('.modal').on('show.bs.modal', centerModals);      //当模态框出现的时候
     $(window).on('resize', centerModals);               //当窗口大小变化的时候
     $("#start-date").datepicker({
@@ -83,16 +126,4 @@ $(document).ready(function(){
         var date = $(this).datepicker("getFormattedDate");
         $("#start-date-input").val(date);
     });
-	//发送ajax请求
-	//请求用户数据
-	var url = '/api/v1.0/session';
-	$.get(url,function(data){
-		if('0' == data.errorno){
-			//显示用户登录信息
-    	$(".top-bar>.user-info").show();
-		$(".user-name").html(data.data);	
-		}else{
-    	$(".top-bar>.register-login").show();
-		}
-	});
 })

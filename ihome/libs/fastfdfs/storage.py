@@ -1,7 +1,8 @@
 from fdfs_client.client import get_tracker_conf
 from fdfs_client.client import Fdfs_client
-from ihome.constants import FASTFDFS_CONFIG_PATH
+import os
 
+FASTFDFS_CONFIG_PATH = os.path.join(os.path.dirname(__file__),"./fdfs_client.conf")
 # 分布式文件存储类
 class Storage(object):
 	'''用于存储用户的图片数据'''

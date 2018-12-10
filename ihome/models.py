@@ -1,7 +1,7 @@
 from datetime import datetime
 from . import db
 from werkzeug.security import generate_password_hash
-
+from ihome.constants import AVATAR_URL_PREFIXED,HOUSE_VERBOSE_INFO_MAX_COMMENT
 
 class BaseModel(object):
 	"""模型基类，为每个模型补充创建时间与更新时间"""
@@ -43,6 +43,11 @@ class Area(BaseModel, db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 区域编号
     name = db.Column(db.String(32), nullable=False)  # 区域名字
     houses = db.relationship("House", backref="area")  # 区域的房屋
+    
+    def to_dict(self):
+        '''返回对象字典'''
+        d = {'id':self.id,'name':self.name}
+        return d
 
 
 # 房屋设施表，建立房屋与设施的多对多关系
@@ -79,6 +84,35 @@ class House(BaseModel, db.Model):
     orders = db.relationship("Order", backref="house")  # 房屋的订单
 
 
+    def to_base_dict(self):
+        '''房子的基本信息'''
+        d = {"order_count":self.order_count,"address":self.address,"room_count":self.room_count,"user_avatar_url":AVATAR_URL_PREFIXED+self.user.avatar_url,"user_id":self.user_id,"house_id":self.id,"title":self.title,"area":self.area.name,"price":self.price//100,"image_url":AVATAR_URL_PREFIXED+self.index_image_url,"ctime":self.create_time.strftime("%Y-%m-%d %H:%M:%S")}
+        return d
+
+
+    def to_verbose_dict(self):
+        '''房子的详细信息'''
+        d = {"user_name":self.user.name,"user_avatar_url":AVATAR_URL_PREFIXED+self.user.avatar_url,"user_id":self.user_id,"house_id":self.id,"title":self.title,"area":self.area.name,"price":self.price//100,"address":self.address,"room_count":self.room_count,"acreage":self.acreage,"unit":self.unit,"capacity":self.capacity,"beds":self.beds,"deposit":self.deposit,"min_days":self.min_days,"max_days":self.max_days,}
+        
+        # 获取所有的房屋图片
+        d["images_url"] = [AVATAR_URL_PREFIXED+image.url for image in self.images]
+	
+        # 获取所有的设施名字
+        d["facility_name"] = [facility.name for facility in self.facilities]
+
+        # 获取所有的已完成的订单评论
+        d["comments"] = []
+        orders = Order.query.filter(Order.house_id == self.id,Order.status == "COMPLETE").order_by(Order.create_time.desc()).limit(HOUSE_VERBOSE_INFO_MAX_COMMENT)
+        for order in orders:
+            comment = {}
+            comment['ctime'] = order.create_time.strftime("%Y-%m-%d %H:%M:%S")
+            user_name = order.user.name if order.user.name != order.user.mobile else "匿名用户"
+            comment['user_name'] = user_name
+            comment['order_comment'] = order.comment
+            d["comments"].append(comment)
+        # 返回字典
+        return d
+
 class Facility(BaseModel, db.Model):
     """设施信息"""
 
@@ -87,6 +121,9 @@ class Facility(BaseModel, db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 设施编号
     name = db.Column(db.String(32), nullable=False)  # 设施名字
 
+    def to_dict(self):
+        d={"id":self.id,"name":self.name}
+        return d
 
 class HouseImage(BaseModel, db.Model):
     """房屋图片"""
@@ -123,4 +160,18 @@ class Order(BaseModel, db.Model):
         ),
         default="WAIT_ACCEPT", index=True)
     comment = db.Column(db.Text)  # 订单的评论信息或者拒单原因
+    trade_no = db.Column(db.String(80))  # 交易的流水号 支付宝的
+   
+    def to_dict(self):
+        d = {"order_id": self.id,
+            "title": self.house.title,
+            "img_url": AVATAR_URL_PREFIXED + self.house.index_image_url if self.house.index_image_url else "",
+            "start_date": self.begin_date.strftime("%Y-%m-%d"),
+            "end_date": self.end_date.strftime("%Y-%m-%d"),
+            "ctime": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "days": self.days,
+            "amount": self.amount,
+            "status": self.status,
+            "comment": self.comment if self.comment else ""}
+        return d
 

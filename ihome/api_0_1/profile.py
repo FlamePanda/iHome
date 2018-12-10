@@ -129,7 +129,7 @@ def update_username():
 		# mysql 数据库异常
 		db.session.rollback()
 		current_app.logger.error(ex)
-		return jsonify(errorno=RET.DBERR,errormsg="mysql server error!")
+		return jsonify(errorno=RET.DBERR,errormsg="the name had existed!")
 	session['userName'] = new_user_name
 	# 返回应答
 	return jsonify(errorno=RET.OK,errormsg="update user name success!",data={'name':new_user_name})
